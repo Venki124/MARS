@@ -1,0 +1,77 @@
+import apache_beam as beam
+import os
+import datetime
+import json
+
+def processline(line):
+    yield line
+
+def processbqline(line):
+    # Convert CSV line → dictionary
+    parts = line.split(',')
+    if len(parts) == 7:  # ensure minimum columns
+        try:
+            outputrow = {
+                'timestamp': parts[0].strip(),
+                'ipaddr': parts[1].strip(),
+                'action': parts[2].strip(),
+                'srcacct': parts[3].strip(),
+                'destacct': parts[4].strip(),
+                'amount': float(parts[5].strip()),
+                'customername': parts[6].strip()
+            }
+            yield outputrow
+        except Exception as e:
+            # skip invalid lines
+            print(f"⚠️ Skipping line due to error: {e}")
+    else:
+        # skip malformed lines
+        pass
+
+
+
+def run():
+    projectname=os.getenv('GOOGLE_CLOUD_PROJECT')
+    bucketname=os.getenv('GOOGLE_CLOUD_PROJECT') + '-bucket'
+    jobname = 'mars-cloud-bq-job'+datetime.datetime.now().strftime("%Y%m%d%H%M")
+    region = 'us-central1'
+
+    argv = [
+        '--runner=DataflowRunner',
+        '--project='+projectname,
+        '--job_name='+jobname,
+        '--region='+region,
+        '--staging_location=gs://'+bucketname+'/staging',
+        '--temp_location=gs://'+bucketname+'/temploc/',
+        '--machine_type=e2-standard-2',
+        '--max_num_workers=2',
+        '--service_account_email=907287929777-compute@developer.gserviceaccount.com',
+        '--save_main_session'
+    ]
+
+    p = beam.Pipeline(argv=argv)
+    input = 'gs://mars-sample/*.csv'
+    output = f'gs://{bucketname}/output/output'
+    output_table = f'{projectname}:mars.activitiesbq'
+
+    writeoutput = (p
+        | 'Read Files' >> beam.io.ReadFromText(input)
+        | 'process Lines' >> beam.FlatMap(lambda line: processline(line))
+    )
+    (
+        writeoutput
+        | 'Write Output to CS' >> beam.io.WriteToText(output)
+    )
+    (
+        writeoutput
+        | "process for bq" >> beam.FlatMap(lambda line: processbqline(line))
+        | 'write to BQ' >> beam.io.WriteToBigQuery(table=output_table,write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
+                                                   create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
+                                                   schema='timestamp:STRING, ipaddr:STRING, action:STRING, srcacct:STRING, destacct:STRING, amount:FLOAT, customername:STRING')
+    )
+
+    p.run().wait_until_finish()
+
+
+if __name__ == '__main__':
+    run()
