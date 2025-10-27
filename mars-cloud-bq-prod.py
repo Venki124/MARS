@@ -59,10 +59,10 @@ def run():
         | 'Read Files' >> beam.io.ReadFromText(input)
         | 'process Lines' >> beam.FlatMap(lambda line: processline(line))
     )
-    (
-        writeoutput
-        | 'Write Output to CS' >> beam.io.WriteToText(output)
-    )
+    # (
+    #     writeoutput
+    #     | 'Write Output to CS' >> beam.io.WriteToText(output)
+    # )
     (
         writeoutput
         | "process for bq" >> beam.FlatMap(lambda line: processbqline(line))
