@@ -70,7 +70,7 @@ def run():
         writeoutput
         | "process for bq" >> beam.FlatMap(lambda line: processbqline(line))
         | "window into" >> beam.WindowInto(window.FixedWindows(60),
-                                           trigger=beam.trigger.AfterProcessing(60),
+                                           trigger=beam.trigger.AfterProcessingTime(60),
                                            accumulation_mode=beam.trigger.AccumulationMode.DISCARDING)
         | 'write to BQ' >> beam.io.WriteToBigQuery(table=output_table,write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
                                                    create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
