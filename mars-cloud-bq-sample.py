@@ -3,6 +3,8 @@ import os
 import datetime
 import json
 
+import util
+
 def processline(line):
     yield line
 
@@ -35,7 +37,8 @@ def run():
     bucketname=os.getenv('GOOGLE_CLOUD_PROJECT') + '-bucket'
     jobname = 'mars-cloud-bq-job'+datetime.datetime.now().strftime("%Y%m%d%H%M")
     region = 'us-central1'
-    
+    project_number = util.get_project_number()
+
     argv = [
         '--runner=DataflowRunner',
         '--project='+projectname,
@@ -45,7 +48,7 @@ def run():
         '--temp_location=gs://'+bucketname+'/temploc/',
         '--machine_type=e2-standard-2',
         '--max_num_workers=2',
-        '--service_account_email=764778762275-compute@developer.gserviceaccount.com',
+        '--service_account_email='+project_number+'-compute@developer.gserviceaccount.com',
         '--save_main_session'
     ]
 
