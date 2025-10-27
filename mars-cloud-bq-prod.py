@@ -68,7 +68,8 @@ def run():
         | "process for bq" >> beam.FlatMap(lambda line: processbqline(line))
         | 'write to BQ' >> beam.io.WriteToBigQuery(table=output_table,write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
                                                    create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
-                                                   schema='timestamp:STRING, ipaddr:STRING, action:STRING, srcacct:STRING, destacct:STRING, amount:FLOAT, customername:STRING')
+                                                   schema='timestamp:STRING, ipaddr:STRING, action:STRING, srcacct:STRING, destacct:STRING, amount:FLOAT, customername:STRING',
+                                                   method=beam.io.WriteToBigQuery.Method.STREAMING_INSERTS)
     )
 
     p.run().wait_until_finish()
