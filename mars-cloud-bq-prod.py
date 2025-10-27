@@ -50,7 +50,9 @@ def run():
         '--machine_type=e2-standard-2',
         '--max_num_workers=2',
         '--service_account_email='+project_number+'-compute@developer.gserviceaccount.com',
-        '--save_main_session'
+        '--save_main_session',
+        '--experiments=use_runner_v2',
+        '--experiments=enable_bq_streaming_insert_v2'
     ]
 
     p = beam.Pipeline(argv=argv)
@@ -69,13 +71,14 @@ def run():
     (
         writeoutput
         | "process for bq" >> beam.FlatMap(lambda line: processbqline(line))
-        | "window into" >> beam.WindowInto(window.FixedWindows(60),
-                                           trigger=beam.trigger.AfterProcessingTime(60),
-                                           accumulation_mode=beam.trigger.AccumulationMode.DISCARDING)
+        # | "window into" >> beam.WindowInto(window.FixedWindows(60),
+        #                                    trigger=beam.trigger.AfterProcessingTime(60),
+        #                                    accumulation_mode=beam.trigger.AccumulationMode.DISCARDING)
         | 'write to BQ' >> beam.io.WriteToBigQuery(table=output_table,write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
                                                    create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
                                                    schema='timestamp:STRING, ipaddr:STRING, action:STRING, srcacct:STRING, destacct:STRING, amount:FLOAT, customername:STRING',
-                                                   method=beam.io.WriteToBigQuery.Method.STREAMING_INSERTS)
+                                                #    method=beam.io.WriteToBigQuery.Method.STREAMING_INSERTS
+                                                   method=beam.io.WriteToBigQuery.Method.FILE_LOADS)
     )
 
     p.run().wait_until_finish()
