@@ -3,6 +3,9 @@ import os
 import datetime
 import json
 import util
+from apache_beam.transforms import window
+from apache_beam.transforms import trigger
+
 def processline(line):
     yield line
 
@@ -66,6 +69,9 @@ def run():
     (
         writeoutput
         | "process for bq" >> beam.FlatMap(lambda line: processbqline(line))
+        | "window into" >> beam.WindowInto(window.FixedWindows(60),
+                                           trigger=beam.trigger.AfterProcessing(60),
+                                           accumulation_mode=beam.trigger.AccumulationMode.DISCARDING)
         | 'write to BQ' >> beam.io.WriteToBigQuery(table=output_table,write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
                                                    create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
                                                    schema='timestamp:STRING, ipaddr:STRING, action:STRING, srcacct:STRING, destacct:STRING, amount:FLOAT, customername:STRING',
