@@ -54,7 +54,6 @@ def run():
         '--experiments=use_runner_v2',
         '--experiments=use_dataflow_bq_sink',
         '--experiments=enable_unified_streaming_write',
-        '--experiments=enable_prime',
         '--max_bundle_size=1000',
         '--max_bundle_time_millis=5000'
 
