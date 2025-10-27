@@ -35,7 +35,7 @@ def run():
     bucketname=os.getenv('GOOGLE_CLOUD_PROJECT') + '-bucket'
     jobname = 'mars-cloud-bq-job'+datetime.datetime.now().strftime("%Y%m%d%H%M")
     region = 'us-central1'
-
+    
     argv = [
         '--runner=DataflowRunner',
         '--project='+projectname,
@@ -45,14 +45,14 @@ def run():
         '--temp_location=gs://'+bucketname+'/temploc/',
         '--machine_type=e2-standard-2',
         '--max_num_workers=2',
-        '--service_account_email=907287929777-compute@developer.gserviceaccount.com',
+        '--service_account_email=764778762275-compute@developer.gserviceaccount.com',
         '--save_main_session'
     ]
 
     p = beam.Pipeline(argv=argv)
     input = 'gs://mars-sample/*.csv'
     output = f'gs://{bucketname}/output/output'
-    output_table = f'{projectname}:mars.activitiesbq'
+    output_table = f'{projectname}:mars.activitiesbq_sample'
 
     writeoutput = (p
         | 'Read Files' >> beam.io.ReadFromText(input)
