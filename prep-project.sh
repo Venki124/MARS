@@ -20,6 +20,8 @@ else
     # enable service apis
     echo "Enable the Service APIs"
     gcloud services enable dataflow.googleapis.com
+    gcloud services enable cloudscheduler.googleapis.com
+    gcloud services enable datapipelines.googleapis.com
 
 <<COMMENT
 

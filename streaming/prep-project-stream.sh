@@ -29,7 +29,7 @@ COMMENT
 
     # bq mk --schema timestamp:STRING,ipaddr:STRING,action:STRING,srcacct:STRING,destacct:STRING,amount:NUMERIC,customername:STRING -t mars.activities
     # bq mk --schema message:STRING -t mars.raw
-    echo "Creating pubsub topic and subscription
+    echo "Creating pubsub topic and subscription"
     gcloud pubsub topics create activities-topic
     gcloud pubsub subscriptions create activities-subscription --topic activities-topic
 fi
