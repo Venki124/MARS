@@ -35,7 +35,7 @@ class ParseMarsPubSubDoFn(beam.DoFn):
                 'customername': payload['customername'],
                 'publish_time': str(publish_time.to_utc_datetime()),
                 'raw_source': 'pubsub-stream',
-                'ingestion_ts': datetime.now(datetime.timezone.utc).isoformat()
+                'ingestion_ts': datetime.now(datetime.UTC).isoformat()
             }
 
             # Deduplication key
@@ -48,7 +48,7 @@ class ParseMarsPubSubDoFn(beam.DoFn):
 
         except Exception as e:
             yield beam.pvalue.TaggedOutput('error', {
-                'ingestion_ts': datetime.utcnow().isoformat(),
+                'ingestion_ts': datetime.now(datetime.UTC).isoformat(),
                 'pipeline': 'mars-stream',
                 'source': 'projects/moonbank-mars/topics/activities',
                 'payload': msg if 'msg' in locals() else str(message),
@@ -69,7 +69,7 @@ def run():
     bucket = f"{project}-bucket"
     topic = 'projects/moonbank-mars/topics/activities'
 
-    job_name = f"mars-stream-job-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+    job_name = f"mars-stream-job-{datetime.now(datetime.UTC).strftime('%Y%m%d%H%M%S')}"
 
     options = PipelineOptions(
         runner='DataflowRunner',
@@ -121,7 +121,7 @@ def run():
             ),
             create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
             write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
-            method=beam.io.WriteToBigQuery.Method.STORAGE_API_AT_LEAST_ONCE
+            method=beam.io.WriteToBigQuery.Method.STORAGE_WRITE_API
         )
 
         # Write errors to BigQuery error table
