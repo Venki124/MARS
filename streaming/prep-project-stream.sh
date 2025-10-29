@@ -23,6 +23,10 @@ else
     gcloud projects add-iam-policy-binding $GOOGLE_CLOUD_PROJECT --member serviceAccount:marssa@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com --role roles/dataflow.worker
     sleep 1
     gcloud projects add-iam-policy-binding $GOOGLE_CLOUD_PROJECT --member user:$USER_EMAIL --role roles/iam.serviceAccountUser
+
+    
+    gcloud pubsub topics publish activities-topic --message='20251022000002412476,145.196.32.195,BALANCE,GB19GGRY21807231042124,NULL,0,Jeffrey Ramos'
+
 COMMENT
     echo "Creating the mars dataset"
     bq mk mars
