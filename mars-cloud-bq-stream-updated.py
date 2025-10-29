@@ -6,59 +6,79 @@ import json
 import hashlib
 import traceback
 import logging
-from datetime import datetime as dt
+import datetime
 
 
 
 class ParseMarsPubSubDoFn(beam.DoFn):
-    """Parse, validate, and route Pub/Sub messages to valid/error side outputs."""
+    """Parses Pub/Sub messages (supports both JSON and CSV) and routes valid/error outputs."""
 
     def process(self, message, publish_time=beam.DoFn.TimestampParam):
         try:
-            # Pub/Sub delivers messages as bytes
-            msg = message.decode('utf-8')
-            payload = json.loads(msg)
+            # Decode the Pub/Sub message
+            msg = message.decode("utf-8").strip()
 
-            # Required fields (validate presence)
+            # --- Step 1: Try JSON parse ---
+            try:
+                payload = json.loads(msg)
+                format_type = "json"
+            except json.JSONDecodeError:
+                # --- Step 2: Fallback to CSV parse ---
+                parts = next(csv.reader([msg]))
+                if len(parts) != 7:
+                    raise ValueError(f"Expected 7 fields in CSV, got {len(parts)}")
+                payload = {
+                    "timestamp": parts[0].strip(),
+                    "ipaddr": parts[1].strip(),
+                    "action": parts[2].strip(),
+                    "srcacct": parts[3].strip(),
+                    "destacct": parts[4].strip(),
+                    "amount": parts[5].strip(),
+                    "customername": parts[6].strip(),
+                }
+                format_type = "csv"
+
+            # --- Step 3: Validate required fields ---
             required_fields = ['timestamp', 'ipaddr', 'action', 'srcacct', 'destacct', 'amount', 'customername']
             for f in required_fields:
                 if f not in payload or payload[f] in (None, "", "null"):
                     raise ValueError(f"Missing required field: {f}")
 
-            # Parse and type cast
+            # --- Step 4: Build normalized output row ---
             output_row = {
-                'timestamp': payload['timestamp'],
-                'ipaddr': payload['ipaddr'],
-                'action': payload['action'],
-                'srcacct': payload['srcacct'],
-                'destacct': payload['destacct'],
-                'amount': float(payload['amount']),
-                'customername': payload['customername'],
-                'publish_time': str(publish_time.to_utc_datetime()),
-                'raw_source': 'pubsub-stream',
-                'ingestion_ts': dt.now(dt.timezone.utc).isoformat()
+                "timestamp": str(payload["timestamp"]).strip(),
+                "ipaddr": str(payload["ipaddr"]).strip(),
+                "action": str(payload["action"]).strip(),
+                "srcacct": str(payload["srcacct"]).strip(),
+                "destacct": str(payload["destacct"]).strip(),
+                "amount": float(payload["amount"]),
+                "customername": str(payload["customername"]).strip(),
+                "publish_time": str(publish_time.to_utc_datetime()),
+                "raw_source": f"pubsub-stream-{format_type}",
+                "ingestion_ts": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
 
-            # Deduplication key
+            # --- Step 5: Add deduplication key ---
             insert_id = hashlib.sha256(
                 f"{output_row['timestamp']}-{output_row['srcacct']}-{output_row['action']}".encode()
             ).hexdigest()
-            output_row['insert_id'] = insert_id
+            output_row["insert_id"] = insert_id
 
-            yield beam.pvalue.TaggedOutput('valid', output_row)
+            yield beam.pvalue.TaggedOutput("valid", output_row)
 
         except Exception as e:
-            yield beam.pvalue.TaggedOutput('error', {
-                'ingestion_ts': dt.now(dt.timezone.utc).isoformat(),
-                'pipeline': 'mars-stream',
-                'source': 'projects/moonbank-mars/topics/activities',
-                'payload': msg if 'msg' in locals() else str(message),
-                'attributes': None,
-                'error_type': 'parse_or_validation',
-                'error_message': str(e),
-                'stacktrace': traceback.format_exc(),
-                'retry_count': 0,
-                'insert_id': None
+            # --- Step 6: Send invalid record to error side output ---
+            yield beam.pvalue.TaggedOutput("error", {
+                "ingestion_ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "pipeline": "mars-stream",
+                "source": "projects/moonbank-mars/topics/activities",
+                "payload": msg if 'msg' in locals() else str(message),
+                "attributes": None,
+                "error_type": "parse_or_validation",
+                "error_message": str(e),
+                "stacktrace": traceback.format_exc(),
+                "retry_count": 0,
+                "insert_id": None
             })
 
 
@@ -70,7 +90,7 @@ def run():
     bucket = f"{project}-bucket"
     topic = f'projects/{project}/topics/activities-topic'
 
-    job_name = f"mars-stream-job-{dt.now().strftime('%Y%m%d%H%M%S')}"
+    job_name = f"mars-stream-job-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
 
     options = PipelineOptions(
         runner='DataflowRunner',
