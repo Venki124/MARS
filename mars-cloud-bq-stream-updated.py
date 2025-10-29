@@ -6,7 +6,8 @@ import json
 import hashlib
 import traceback
 import logging
-from datetime import datetime
+from datetime import datetime as dt
+
 
 
 class ParseMarsPubSubDoFn(beam.DoFn):
@@ -35,7 +36,7 @@ class ParseMarsPubSubDoFn(beam.DoFn):
                 'customername': payload['customername'],
                 'publish_time': str(publish_time.to_utc_datetime()),
                 'raw_source': 'pubsub-stream',
-                'ingestion_ts': datetime.now(datetime.timezone.utc).isoformat()
+                'ingestion_ts': dt.now(dt.timezone.utc).isoformat()
             }
 
             # Deduplication key
@@ -48,7 +49,7 @@ class ParseMarsPubSubDoFn(beam.DoFn):
 
         except Exception as e:
             yield beam.pvalue.TaggedOutput('error', {
-                'ingestion_ts': datetime.now(datetime.timezone.utc).isoformat(),
+                'ingestion_ts': dt.now(dt.timezone.utc).isoformat(),
                 'pipeline': 'mars-stream',
                 'source': 'projects/moonbank-mars/topics/activities',
                 'payload': msg if 'msg' in locals() else str(message),
@@ -69,7 +70,7 @@ def run():
     bucket = f"{project}-bucket"
     topic = 'projects/moonbank-mars/topics/activities'
 
-    job_name = f"mars-stream-job-{datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    job_name = f"mars-stream-job-{dt.now().strftime('%Y%m%d%H%M%S')}"
 
     options = PipelineOptions(
         runner='DataflowRunner',
