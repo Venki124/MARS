@@ -79,7 +79,7 @@ def run():
         staging_location=f"gs://{bucket}/staging",
         temp_location=f"gs://{bucket}/temp",
         machine_type='e2-standard-2',
-        max_num_workers=4,
+        max_num_workers=2,
         autoscaling_algorithm='THROUGHPUT_BASED',
         save_main_session=True
     )
