@@ -26,7 +26,7 @@ def processbqline(line):
             yield outputrow
         except Exception as e:
             # skip invalid lines
-            print(f"⚠️ Skipping line due to error: {e}")
+            print(f"Skipping line due to error: {e}")
     else:
         # skip malformed lines
         pass

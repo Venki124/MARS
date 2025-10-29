@@ -8,7 +8,7 @@ def get_project_number():
     ).stdout.strip()
 
     if not project_id:
-        print("❌ No active project set. Run: gcloud config set project <PROJECT_ID>")
+        print("No active project set. Run: gcloud config set project <PROJECT_ID>")
         return None
 
     # Get project number cleanly
@@ -20,7 +20,7 @@ def get_project_number():
     project_number = result.stdout.strip()
 
     if not project_number:
-        print("❌ Could not fetch project number. Check project permissions.")
+        print("Could not fetch project number. Check project permissions.")
         return None
 
     return project_number
@@ -29,4 +29,4 @@ def get_project_number():
 if __name__ == "__main__":
     project_number = get_project_number()
     if project_number:
-        print("✅ Project Number:", project_number)
+        print("Project Number:", project_number)

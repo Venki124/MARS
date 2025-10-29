@@ -26,7 +26,12 @@ def processbqline(line):
             yield outputrow
         except Exception as e:
             # skip invalid lines
-            print(f"⚠️ Skipping line due to error: {e}")
+            print(f"Skipping line due to error: {e}")
+            # outputrow = {
+            #     {'errormsg':line,
+            #      'error':e
+            #     }
+            
     else:
         # skip malformed lines
         pass
@@ -48,7 +53,7 @@ def run():
         '--staging_location=gs://'+bucketname+'/staging',
         '--temp_location=gs://'+bucketname+'/temploc/',
         '--machine_type=e2-standard-2',
-        '--max_num_workers=2',
+        '--max_num_workers=6',
         '--service_account_email='+project_number+'-compute@developer.gserviceaccount.com',
         '--save_main_session'
     ]
@@ -60,14 +65,6 @@ def run():
 
     writeoutput = (p
         | 'Read Files' >> beam.io.ReadFromText(input)
-        | 'process Lines' >> beam.FlatMap(lambda line: processline(line))
-    )
-    # (
-    #     writeoutput
-    #     | 'Write Output to CS' >> beam.io.WriteToText(output)
-    # )
-    (
-        writeoutput
         | "process for bq" >> beam.FlatMap(lambda line: processbqline(line))
         # | "window into" >> beam.WindowInto(window.FixedWindows(60),
         #                                    trigger=beam.trigger.AfterProcessingTime(60),

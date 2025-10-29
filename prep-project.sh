@@ -1,6 +1,10 @@
 #! /bin/bash
 # MAKE SURE GCP PROJECT IS SET
 # gcloud config set project PROJECT_ID
+
+# set the project
+gcloud config set project $(gcloud projects list --format='value(PROJECT_ID)' | grep playground)
+
 GOOGLE_CLOUD_PROJECT=$(gcloud config get-value project)
 echo $GOOGLE_CLOUD_PROJECT
 
@@ -10,8 +14,15 @@ if [[ -z "${GOOGLE_CLOUD_PROJECT}" ]]; then
     echo "(where PROJECT_ID is the desired project)"
 else
     echo "Project Name: $GOOGLE_CLOUD_PROJECT"
+
     gcloud storage buckets create gs://$GOOGLE_CLOUD_PROJECT"-bucket" --soft-delete-duration=0
+
+    # enable service apis
+    echo "Enable the Service APIs"
     gcloud services enable dataflow.googleapis.com
+
+<<COMMENT
+
     gcloud iam service-accounts create marssa
     sleep 1
     gcloud projects add-iam-policy-binding $GOOGLE_CLOUD_PROJECT --member serviceAccount:marssa@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com --role roles/editor
@@ -19,6 +30,9 @@ else
     gcloud projects add-iam-policy-binding $GOOGLE_CLOUD_PROJECT --member serviceAccount:marssa@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com --role roles/dataflow.worker
     sleep 1
     gcloud projects add-iam-policy-binding $GOOGLE_CLOUD_PROJECT --member user:$USER_EMAIL --role roles/iam.serviceAccountUser
+    
+COMMENT
+
     bq mk mars
-    bq mk --schema timestamp:STRING,ipaddr:STRING,action:STRING,srcacct:STRING,destacct:STRING,amount:NUMERIC,customername:STRING -t mars.activities
+    # bq mk --schema timestamp:STRING,ipaddr:STRING,action:STRING,srcacct:STRING,destacct:STRING,amount:NUMERIC,customername:STRING -t mars.activities
 fi
