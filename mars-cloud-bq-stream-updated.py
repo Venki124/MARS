@@ -142,7 +142,7 @@ def run():
             ),
             create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
             write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
-            method=beam.io.WriteToBigQuery.Method.STORAGE_API_AT_LEAST_ONCE
+            method=beam.io.WriteToBigQuery.Method.STORAGE_WRITE_API
         )
 
         logging.info("MARS streaming pipeline is running.")
