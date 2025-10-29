@@ -55,7 +55,7 @@ class ParseMarsPubSubDoFn(beam.DoFn):
                 "customername": str(payload["customername"]).strip(),
                 "publish_time": str(publish_time.to_utc_datetime()),
                 "raw_source": f"pubsub-stream-{format_type}",
-                "ingestion_ts": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                "ingestion_ts": datetime.datetime.now(datetime.timezone.utc)
             }
 
             # --- Step 5: Add deduplication key ---
@@ -69,7 +69,7 @@ class ParseMarsPubSubDoFn(beam.DoFn):
         except Exception as e:
             # --- Step 6: Send invalid record to error side output ---
             yield beam.pvalue.TaggedOutput("error", {
-                "ingestion_ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "ingestion_ts": datetime.datetime.now(datetime.timezone.utc),
                 "pipeline": "mars-stream",
                 "source": "projects/moonbank-mars/topics/activities",
                 "payload": msg if 'msg' in locals() else str(message),
