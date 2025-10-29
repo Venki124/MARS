@@ -68,7 +68,7 @@ def run():
     project = os.getenv('GOOGLE_CLOUD_PROJECT')
     region = 'us-central1'
     bucket = f"{project}-bucket"
-    topic = 'projects/moonbank-mars/topics/activities'
+    topic = f'projects/{project}/topics/activities'
 
     job_name = f"mars-stream-job-{dt.now().strftime('%Y%m%d%H%M%S')}"
 
@@ -87,8 +87,8 @@ def run():
     options.view_as(StandardOptions).streaming = True
 
     # BigQuery tables
-    output_table = f"{project}:mars_dw.activities_stream"
-    error_table = f"{project}:mars_dw.ingest_errors"
+    output_table = f"{project}:mars.activities_stream"
+    error_table = f"{project}:mars.stream_ingest_errors"
 
     with beam.Pipeline(options=options) as p:
         messages = (
