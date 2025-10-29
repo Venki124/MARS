@@ -68,7 +68,7 @@ def run():
     project = os.getenv('GOOGLE_CLOUD_PROJECT')
     region = 'us-central1'
     bucket = f"{project}-bucket"
-    topic = f'projects/{project}/topics/activities-subscription'
+    topic = f'projects/{project}/topics/activities-topic'
 
     job_name = f"mars-stream-job-{dt.now().strftime('%Y%m%d%H%M%S')}"
 
