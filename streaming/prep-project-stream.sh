@@ -14,6 +14,7 @@ else
     gcloud storage buckets create gs://$GOOGLE_CLOUD_PROJECT"-bucket" --soft-delete-duration=0
     # gcloud services disable dataflow.googleapis.com --force
     gcloud services enable dataflow.googleapis.com
+    gcloud services enable pubsub.googleapis.com
 
 <<COMMENT
     gcloud iam service-accounts create marssa

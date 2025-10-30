@@ -3,4 +3,4 @@
 echo $GOOGLE_CLOUD_PROJECT
 
 sudo pip3 install -r requirements.txt
-python3 mars-stream-cloud.py
+python3 mars-stream-bq-updated.py

@@ -76,7 +76,7 @@ def run():
 
     p = beam.Pipeline(options=options)
 
-    input_pattern = "gs://moonbank-mars-production/*.csv"
+    input_pattern = "gs://moonbank-mars-sample/*.csv"
     output_table = f"{project}:mars.activities_batch"
     error_table = f"{project}:mars.batch_ingest_errors"
 
